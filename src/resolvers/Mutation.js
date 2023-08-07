@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
-APP_SECRET = "GraphQL";
+const { APP_SECRET } = require("../utils");
 
 // ユーザーの新規登録
 async function signup(parent, args, context) {
@@ -54,7 +53,25 @@ async function login(parent, args, context) {
   };
 }
 
+async function post(parent, args, context) {
+  // ユーザーの取得
+  const { userId } = context;
+  if (!userId) {
+    throw new Error("You are not authenticated!");
+  }
+
+  // リンクの作成
+  return await context.prisma.link.create({
+    data: {
+      url: args.url,
+      description: args.description,
+      postedBy: { connect: { id: userId } },
+    },
+  });
+}
+
 module.exports = {
   signup,
   login,
+  post,
 };

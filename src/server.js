@@ -4,6 +4,8 @@ const path = require("path");
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getUserId } = require("./utils");
+const { get } = require("http");
 
 // リゾルバー関数定義
 const resolvers = {
@@ -12,7 +14,7 @@ const resolvers = {
     info: () => `This is the API of a Hackernews Clone`,
     feed: () => async (parent, args, context) => {
       return await context.prisma.link.findMany();
-    }
+    },
   },
 
   Mutation: {
@@ -31,8 +33,12 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs: fs.readFileSync(path.join(__dirname, "schema.graphql"), "utf8"),
   resolvers,
-  context: {
-    prisma,
+  context: ({ req }) => {
+    return {
+      ...req,
+      prisma,
+      userId: req && req.headers.authorization ? getUserId(req) : null,
+    };
   },
 });
 
